@@ -1,0 +1,45 @@
+# Gradle
+.gradle/
+build/
+
+# Local configuration (SDK path, etc.)
+local.properties
+
+# Log/OS Files
+*.log
+.DS_Store
+
+# Android Studio generated files and folders
+captures/
+.externalNativeBuild/
+.cxx/
+*.aab
+*.apk
+output-metadata.json
+
+# IntelliJ / Android Studio project files
+*.iml
+.idea/
+!.idea/codeStyles/          # Keep project-wide code style settings (optional)
+!.idea/runConfigurations/   # Keep shared run configurations (optional)
+
+# Specific IntelliJ/AS files to ignore
+.idea/caches
+.idea/libraries
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+misc.xml
+deploymentTargetDropDown.xml
+render.experimental.xml
+
+# Keystore files (do not share signing keys)
+*.jks
+*.keystore
+
+# Google Services (e.g., APIs or Firebase)
+google-services.json
+
+# Android Profiling
+*.hprof
