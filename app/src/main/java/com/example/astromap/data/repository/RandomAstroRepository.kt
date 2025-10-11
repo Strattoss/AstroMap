@@ -2,12 +2,11 @@ package com.example.astromap.data.repository
 
 import com.example.astromap.domain.model.Constellation
 import com.example.astromap.domain.model.Star
-import com.example.astromap.domain.repository.IConstellationRepository
-import com.example.astromap.domain.repository.IStarRepository
+import com.example.astromap.domain.repository.IAstroRepository
 import kotlin.math.asin
 import kotlin.random.Random
 
-class RandomStellarRepository(numStars: Int, numConstellations: Int) : IStarRepository, IConstellationRepository {
+class RandomAstroRepository(numStars: Int, numConstellations: Int) : IAstroRepository {
     private val stars = List(numStars) { id ->
         val ra = Random.nextDouble(0.0, 360.0)
         val dec = Math.toDegrees(asin(Random.nextDouble(-1.0, 1.0)))

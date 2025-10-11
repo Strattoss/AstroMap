@@ -2,7 +2,7 @@ package com.example.astromap.presentation.view
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.example.astromap.data.repository.RandomStellarRepository
+import com.example.astromap.data.repository.RandomAstroRepository
 import com.example.astromap.presentation.viewmodel.SkyViewModel
 
 class MainActivity : AppCompatActivity() {
@@ -12,10 +12,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val starRepo = RandomStellarRepository(500, 200)
-//        val starRepo = FileStellarRepository(this)  // uncomment if want to use real data
+        val astroRepo = RandomAstroRepository(500, 200)
+//        val astroRepo = FileAstroRepository(this)  // uncomment if want to use real data
 
-        viewModel = SkyViewModel(starRepo)
+        viewModel = SkyViewModel(astroRepo)
         val stars = viewModel.loadStars()
 
         skyView = SkyView(this, stars)
