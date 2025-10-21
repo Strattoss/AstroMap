@@ -1,6 +1,7 @@
 package com.example.astromap.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.example.astromap.domain.model.Constellation
 import com.example.astromap.domain.model.Star
 import com.example.astromap.domain.repository.IAstroRepository
@@ -35,14 +36,15 @@ class FileAstroRepository(private val context: Context) : IAstroRepository {
     }
 
     private fun parseConstellations(fileName: String): List<Constellation> {
-        val constellations = mutableListOf<Constellation>()
         val starsMap = getStars().associateBy { Pair(it.ra, it.dec) }
         val jsonString =
             context.assets.open(fileName).bufferedReader()
                 .use { it.readText() }
         val constellationFeatureCollection = Gson().fromJson(jsonString, ConstellationFeatureCollection::class.java)
 
-        constellationFeatureCollection.features.forEach { feature ->
+        return constellationFeatureCollection.features.map { feature ->
+            val stars = mutableSetOf<Star>()
+            val lines = mutableSetOf<Pair<Star, Star>>()
             feature.geometry.coordinates.forEach { line ->
                 for (i in 0 until line.size - 1) {
                     val fromRa = line[i][0]
@@ -54,12 +56,17 @@ class FileAstroRepository(private val context: Context) : IAstroRepository {
                     val toStar = starsMap[Pair(toRa, toDec)]
 
                     if (fromStar != null && toStar != null) {
-                        constellations.add(Constellation(fromStar.id, toStar.id))
+                        stars.add(fromStar)
+                        stars.add(toStar)
+                        lines.add(Pair(fromStar, toStar))
+                    } else {
+                        Log.w("astroMap", "Star not found: $fromRa, $fromDec or $toRa, $toDec")
+                        // TODO: later we should probably modify this approach - we won't render such constellations fully
                     }
                 }
             }
+            Constellation(stars, lines)
         }
-        return constellations
     }
 
     private fun getStarsFileNameByLocation(): String {

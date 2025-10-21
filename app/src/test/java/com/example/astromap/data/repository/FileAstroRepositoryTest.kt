@@ -148,8 +148,11 @@ class FileAstroRepositoryTest {
 
         val constellations = repository.getConstellations()
 
+        val star1 = Star(1, 1.0, 1.0, 1.0)
+        val star2 = Star(2, 2.0, 2.0, 2.0)
+
         assertEquals(1, constellations.size)
-        assertEquals(1, constellations[0].fromId)
-        assertEquals(2, constellations[0].toId)
+        assertEquals(setOf(star1, star2), constellations[0].stars)
+        assertEquals(setOf(Pair(star1, star2)), constellations[0].lines)
     }
 }

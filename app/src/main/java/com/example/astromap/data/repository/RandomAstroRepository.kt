@@ -27,6 +27,9 @@ class RandomAstroRepository(numStars: Int, numConstellations: Int) : IAstroRepos
             toId = Random.nextInt(0, stars.size)
         } while (fromId == toId)
 
-        return Constellation(fromId, toId)
+        val fromStar = stars[fromId]
+        val toStar = stars[toId]
+
+        return Constellation(setOf(fromStar, toStar), setOf(Pair(fromStar, toStar)))
     }
 }
