@@ -41,10 +41,8 @@ class SkyRenderer(
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         GLES20.glClearColor(0f, 0f, 0f, 1f)
 
-        // Vertex buffer
         vertexBuffer = createFloatBuffer(starCoords)
 
-        // Shaders
         val vertexShaderCode = """
             uniform mat4 uMVPMatrix;
             attribute vec4 vPosition;
@@ -54,7 +52,6 @@ class SkyRenderer(
             }
         """
 
-
         val fragmentShaderCode = """
             precision mediump float;
             void main() {
@@ -62,15 +59,7 @@ class SkyRenderer(
             }
         """
 
-        val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode)
-        val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode)
-
-        program = GLES20.glCreateProgram().also {
-            GLES20.glAttachShader(it, vertexShader)
-            GLES20.glAttachShader(it, fragmentShader)
-            GLES20.glLinkProgram(it)
-        }
-
+        program = ShaderUtils.createProgram(vertexShaderCode, fragmentShaderCode)
         positionHandle = GLES20.glGetAttribLocation(program, "vPosition")
         mvpMatrixHandle = GLES20.glGetUniformLocation(program, "uMVPMatrix")
     }
@@ -150,20 +139,6 @@ class SkyRenderer(
                 position(0)
             }
         }
-    }
-
-    private fun loadShader(type: Int, code: String): Int {
-        val shader = GLES20.glCreateShader(type)
-        GLES20.glShaderSource(shader, code)
-        GLES20.glCompileShader(shader)
-        val compiled = IntArray(1)
-        GLES20.glGetShaderiv(shader, GLES20.GL_COMPILE_STATUS, compiled, 0)
-        if (compiled[0] == 0) {
-            val error = GLES20.glGetShaderInfoLog(shader)
-            GLES20.glDeleteShader(shader)
-            throw RuntimeException("Shader compile failed: $error")
-        }
-        return shader
     }
 
     private fun raDecToXYZ(ra: Double, dec: Double): FloatArray {
