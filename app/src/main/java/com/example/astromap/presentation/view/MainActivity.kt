@@ -18,8 +18,9 @@ class MainActivity : AppCompatActivity() {
 
         viewModel = SkyViewModel(astroRepo)
         val stars = viewModel.loadStars()
+        val constellations = viewModel.loadConstellations()
 
-        skyView = SkyView(this, stars)
+        skyView = SkyView(this, stars, constellations)
         setContentView(skyView)
     }
 
