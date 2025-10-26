@@ -20,8 +20,10 @@ class SkyRenderer(
     // --- OpenGL handles ---
     private var program = 0
     private var positionHandle = 0
+    private var magnitudeHandle = 0
     private var mvpMatrixHandle = 0
     private lateinit var vertexBuffer: FloatBuffer
+    private lateinit var magnitudeBuffer: FloatBuffer
 
     // --- Matrices ---
     private val projectionMatrix = FloatArray(16)
@@ -33,22 +35,35 @@ class SkyRenderer(
     var angleY = 0f
 
     // --- Precomputed star positions ---
-    private val starCoords = stars.flatMap {
-        val xyz = raDecToXYZ(it.ra, it.dec)
-        listOf(xyz[0], xyz[1], xyz[2])
-    }.toFloatArray()
+    private val starCoords = FloatArray(stars.size * 3)
+    private val starMagnitudes = FloatArray(stars.size)
+
+    init {
+        for (i in stars.indices) {
+            val xyz = raDecToXYZ(stars[i].ra, stars[i].dec)
+            starCoords[i * 3] = xyz[0]
+            starCoords[i * 3 + 1] = xyz[1]
+            starCoords[i * 3 + 2] = xyz[2]
+            starMagnitudes[i] = stars[i].mag.toFloat()
+        }
+    }
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         GLES20.glClearColor(0f, 0f, 0f, 1f)
 
         vertexBuffer = createFloatBuffer(starCoords)
+        magnitudeBuffer = createFloatBuffer(starMagnitudes)
 
         val vertexShaderCode = """
             uniform mat4 uMVPMatrix;
             attribute vec4 vPosition;
+            attribute float aMagnitude;
             void main() {
                 gl_Position = uMVPMatrix * vPosition;
-                gl_PointSize = 8.0;
+                
+                float size = 7.4 * pow(2.0, -0.28 * aMagnitude); // approx mapping: -1.5 mag -> 10, 6 mag -> 2
+                size = clamp(size, 2.0, 10.0);
+                gl_PointSize = size;
             }
         """
 
@@ -62,6 +77,7 @@ class SkyRenderer(
         program = ShaderUtils.createProgram(vertexShaderCode, fragmentShaderCode)
         positionHandle = GLES20.glGetAttribLocation(program, "vPosition")
         mvpMatrixHandle = GLES20.glGetUniformLocation(program, "uMVPMatrix")
+        magnitudeHandle = GLES20.glGetAttribLocation(program, "aMagnitude")
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
@@ -102,9 +118,14 @@ class SkyRenderer(
         GLES20.glEnableVertexAttribArray(positionHandle)
         GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer)
 
+        GLES20.glEnableVertexAttribArray(magnitudeHandle)
+        GLES20.glVertexAttribPointer(magnitudeHandle, 1, GLES20.GL_FLOAT, false, 0, magnitudeBuffer)
+
         GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0)
         GLES20.glDrawArrays(GLES20.GL_POINTS, 0, stars.size)
+
         GLES20.glDisableVertexAttribArray(positionHandle)
+        GLES20.glDisableVertexAttribArray(magnitudeHandle)
     }
 
     private fun drawConstellationLines() {
