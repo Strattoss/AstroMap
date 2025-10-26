@@ -3,14 +3,15 @@ package com.example.astromap.presentation.view
 import android.content.Context
 import android.opengl.GLSurfaceView
 import android.view.MotionEvent
+import com.example.astromap.domain.model.Constellation
 import com.example.astromap.domain.model.Star
 
-class SkyView(context: Context, stars: List<Star>) : GLSurfaceView(context) {
+class SkyView(context: Context, stars: List<Star>, constellations: List<Constellation>) : GLSurfaceView(context) {
     private val renderer: SkyRenderer
 
     init {
         setEGLContextClientVersion(2)
-        renderer = SkyRenderer(stars)
+        renderer = SkyRenderer(stars, constellations)
         setRenderer(renderer)
         renderMode = RENDERMODE_CONTINUOUSLY
     }
