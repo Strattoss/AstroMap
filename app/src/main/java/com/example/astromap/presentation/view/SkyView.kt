@@ -6,22 +6,26 @@ import android.view.MotionEvent
 import com.example.astromap.domain.model.Constellation
 import com.example.astromap.domain.model.Star
 
-class SkyView(context: Context, stars: List<Star>, constellations: List<Constellation>) : GLSurfaceView(context) {
-    private val renderer: SkyRenderer
+class SkyView(
+    context: Context,
+    private val stars: List<Star>,
+    private val constellations: List<Constellation>
+) : GLSurfaceView(context) {
+
+    val renderer: SkyRenderer
+
+    private var previousX = 0f
+    private var previousY = 0f
 
     init {
         setEGLContextClientVersion(2)
         renderer = SkyRenderer(stars, constellations)
         setRenderer(renderer)
-        renderMode = RENDERMODE_CONTINUOUSLY
     }
 
-    private var previousX = 0f
-    private var previousY = 0f
-    private val touchScale = 0.25f  // sensitivity factor
-
-
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (renderer.explorationModeEnabled) return false
+
         val x = event.x
         val y = event.y
 
@@ -30,17 +34,22 @@ class SkyView(context: Context, stars: List<Star>, constellations: List<Constell
                 val dx = x - previousX
                 val dy = y - previousY
 
-                // Invert Y so dragging up rotates upward
-                renderer.angleY += dx * touchScale
-                renderer.angleX += dy * touchScale
-
-                // Keep angles in range
-                renderer.angleX = renderer.angleX.coerceIn(-90f, 90f)
+                renderer.rotateWithTouch(dx * TOUCH_SCALE_FACTOR, dy * TOUCH_SCALE_FACTOR)
+                requestRender()
             }
         }
 
         previousX = x
         previousY = y
         return true
+    }
+
+    fun updateRotation(rotationMatrix: FloatArray) {
+        renderer.updateRotation(rotationMatrix)
+        requestRender()
+    }
+
+    companion object {
+        private const val TOUCH_SCALE_FACTOR = 0.1f
     }
 }

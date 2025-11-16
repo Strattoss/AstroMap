@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">AstroMap</string>
+    <string name="exploration_mode">Exploration mode</string>
 </resources>
