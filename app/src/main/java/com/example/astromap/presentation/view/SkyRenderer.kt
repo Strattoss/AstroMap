@@ -17,6 +17,8 @@ class SkyRenderer(
     private val constellations: List<Constellation>
 ) : GLSurfaceView.Renderer {
 
+    var explorationModeEnabled = false
+
     // --- OpenGL handles ---
     private var program = 0
     private var positionHandle = 0
@@ -29,10 +31,7 @@ class SkyRenderer(
     private val projectionMatrix = FloatArray(16)
     private val viewMatrix = FloatArray(16)
     private val mvpMatrix = FloatArray(16)
-
-    // --- Camera rotation ---
-    var angleX = 0f
-    var angleY = 0f
+    private var rotationMatrix = FloatArray(16)
 
     // --- Precomputed star positions ---
     private val starCoords = FloatArray(stars.size * 3)
@@ -46,6 +45,22 @@ class SkyRenderer(
             starCoords[i * 3 + 2] = xyz[2]
             starMagnitudes[i] = stars[i].mag.toFloat()
         }
+        Matrix.setIdentityM(rotationMatrix, 0)
+    }
+
+    fun updateRotation(rotationMatrix: FloatArray) {
+        this.rotationMatrix = rotationMatrix
+    }
+
+    fun rotateWithTouch(dx: Float, dy: Float) {
+        val invertedRotation = FloatArray(16)
+        Matrix.setIdentityM(invertedRotation, 0)
+        Matrix.rotateM(invertedRotation, 0, -dx, 0f, 1f, 0f)
+        Matrix.rotateM(invertedRotation, 0, -dy, 1f, 0f, 0f)
+
+        val newRotation = FloatArray(16)
+        Matrix.multiplyMM(newRotation, 0, invertedRotation, 0, rotationMatrix, 0)
+        rotationMatrix = newRotation
     }
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
@@ -97,18 +112,9 @@ class SkyRenderer(
             0f, 1f, 0f    // up direction
         )
 
-        // --- Apply user-controlled rotation (touch input) ---
-        val modelMatrix = FloatArray(16)
-        Matrix.setIdentityM(modelMatrix, 0)
-
-        // X rotation (up/down)
-        Matrix.rotateM(modelMatrix, 0, -angleX, 1f, 0f, 0f)
-        // Y rotation (left/right)
-        Matrix.rotateM(modelMatrix, 0, -angleY, 0f, 1f, 0f)
-
-        val temp = FloatArray(16)
-        Matrix.multiplyMM(temp, 0, viewMatrix, 0, modelMatrix, 0)
-        Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, temp, 0)
+        val finalMatrix = FloatArray(16)
+        Matrix.multiplyMM(finalMatrix, 0, viewMatrix, 0, rotationMatrix, 0)
+        Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, finalMatrix, 0)
 
         drawStars()
         drawConstellationLines()
