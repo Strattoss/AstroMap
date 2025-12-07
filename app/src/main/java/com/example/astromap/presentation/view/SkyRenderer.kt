@@ -49,13 +49,13 @@ class SkyRenderer(
     }
 
     fun updateRotation(rotationMatrix: FloatArray) {
-        this.rotationMatrix = rotationMatrix
+        this.rotationMatrix = getMatrixWithProperControls(rotationMatrix)
     }
 
     fun rotateWithTouch(dx: Float, dy: Float) {
         val invertedRotation = FloatArray(16)
         Matrix.setIdentityM(invertedRotation, 0)
-        Matrix.rotateM(invertedRotation, 0, -dx, 0f, 1f, 0f)
+        Matrix.rotateM(invertedRotation, 0, dx, 0f, 1f, 0f)
         Matrix.rotateM(invertedRotation, 0, -dy, 1f, 0f, 0f)
 
         val newRotation = FloatArray(16)
@@ -98,7 +98,7 @@ class SkyRenderer(
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
         GLES20.glViewport(0, 0, width, height)
         val ratio = width.toFloat() / height
-        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, 1f, 10f)
+        Matrix.frustumM(projectionMatrix, 0, ratio, -ratio, -1f, 1f, 1f, 10f)
     }
 
     override fun onDrawFrame(gl: GL10?) {
@@ -200,4 +200,24 @@ class SkyRenderer(
         }
         return points
     }
+}
+
+private fun columnToOpposite(matrix: FloatArray, columnIndex: Int) {
+    for (i in columnIndex until matrix.size step 4)
+        matrix[i] = -matrix[i]
+}
+
+/**
+ * This function needs to be applied, because the sphere is viewed from the inside,
+ * which causes the navigation to be inverse in the left-right axis by the default.
+ * By applying this function the navigation is brought back to normal.
+ */
+private fun getMatrixWithProperControls(rotationMatrix: FloatArray): FloatArray {
+    val flipMatrix = FloatArray(16)
+    Matrix.setIdentityM(flipMatrix, 0)
+    flipMatrix[0] = -1f
+    val flipped = FloatArray(16)
+    Matrix.multiplyMM(flipped, 0, rotationMatrix, 0, flipMatrix, 0)
+    columnToOpposite(flipped, 0)
+    return flipped
 }
