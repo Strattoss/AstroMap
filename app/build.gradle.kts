@@ -47,6 +47,7 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.media3.common.ktx)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)

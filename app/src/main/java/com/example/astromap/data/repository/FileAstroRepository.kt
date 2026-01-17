@@ -65,16 +65,53 @@ class FileAstroRepository(private val context: Context) : IAstroRepository {
         }
     }
 
+//    private fun parseConstellations(fileName: String): List<Constellation> {
+//        val starsMap = getStars().associateBy { Pair(it.ra, it.dec) }
+//        val jsonString =
+//            context.assets.open(fileName).bufferedReader()
+//                .use { it.readText() }
+//        val constellationFeatureCollection = Gson().fromJson(jsonString, ConstellationFeatureCollection::class.java)
+//
+//        return constellationFeatureCollection.features.map { feature ->
+//            val stars = mutableSetOf<Star>()
+//            val lines = mutableSetOf<Pair<Star, Star>>()
+//            feature.geometry.coordinates.forEach { line ->
+//                for (i in 0 until line.size - 1) {
+//                    val fromRa = line[i][0]
+//                    val fromDec = line[i][1]
+//                    val toRa = line[i + 1][0]
+//                    val toDec = line[i + 1][1]
+//
+//                    val fromStar = starsMap[Pair(fromRa, fromDec)]
+//                    val toStar = starsMap[Pair(toRa, toDec)]
+//
+//                    if (fromStar != null && toStar != null) {
+//                        stars.add(fromStar)
+//                        stars.add(toStar)
+//                        lines.add(Pair(fromStar, toStar))
+//                    } else {
+//                        Log.w("astroMap", "Star not found: $fromRa, $fromDec or $toRa, $toDec")
+//                    }
+//                }
+//            }
+//            Constellation(stars, lines)
+//        }
+//    }
+
     private fun parseConstellations(fileName: String): List<Constellation> {
         val starsMap = getStars().associateBy { Pair(it.ra, it.dec) }
-        val jsonString =
-            context.assets.open(fileName).bufferedReader()
-                .use { it.readText() }
-        val constellationFeatureCollection = Gson().fromJson(jsonString, ConstellationFeatureCollection::class.java)
 
-        return constellationFeatureCollection.features.map { feature ->
+        val jsonLines = context.assets.open(fileName).bufferedReader().use { it.readText() }
+        val constellationLineCollection = Gson().fromJson(jsonLines, ConstellationFeatureCollection::class.java)
+
+        val jsonNames = context.assets.open("constellations.json").bufferedReader().use { it.readText() }
+        val nameCollection = Gson().fromJson(jsonNames, ConstellationNameCollection::class.java)
+        val namesMap = nameCollection.features.associate { it.id to it }
+
+        return constellationLineCollection.features.map { feature ->
             val stars = mutableSetOf<Star>()
             val lines = mutableSetOf<Pair<Star, Star>>()
+
             feature.geometry.coordinates.forEach { line ->
                 for (i in 0 until line.size - 1) {
                     val fromRa = line[i][0]
@@ -82,21 +119,56 @@ class FileAstroRepository(private val context: Context) : IAstroRepository {
                     val toRa = line[i + 1][0]
                     val toDec = line[i + 1][1]
 
-                    val fromStar = starsMap[Pair(fromRa, fromDec)]
-                    val toStar = starsMap[Pair(toRa, toDec)]
+                    val fromStar = starsMap.entries.firstOrNull { (key, _) ->
+                        val dRA = key.first - fromRa
+                        val dDec = key.second - fromDec
+                        (dRA*dRA + dDec*dDec) < 0.01*0.01
+                    }?.value
+
+                    val toStar = starsMap.entries.firstOrNull { (key, _) ->
+                        val dRA = key.first - toRa
+                        val dDec = key.second - toDec
+                        (dRA*dRA + dDec*dDec) < 0.01*0.01
+                    }?.value
 
                     if (fromStar != null && toStar != null) {
                         stars.add(fromStar)
                         stars.add(toStar)
                         lines.add(Pair(fromStar, toStar))
-                    } else {
-                        Log.w("astroMap", "Star not found: $fromRa, $fromDec or $toRa, $toDec")
                     }
                 }
             }
-            Constellation(stars, lines)
+
+            // Pobranie nazwy i pozycji wyświetlania
+            val nameFeature = namesMap[feature.id]
+            val constellationName = nameFeature?.properties?.en
+            val displayCoords = nameFeature?.properties?.display?.let {
+                Triple(it[0], it[1], it[2])
+            }
+
+            Constellation(
+                name = constellationName,
+                stars = stars,
+                lines = lines,
+                displayCoords = displayCoords
+            )
         }
     }
+
+
+
+    private data class ConstellationNameCollection(
+        @SerializedName("features") val features: List<ConstellationNameFeature>
+    )
+
+    private data class ConstellationNameFeature(
+        @SerializedName("id") val id: String,
+        @SerializedName("properties") val properties: ConstellationNameProperties
+    )
+
+//    private data class ConstellationNameProperties(
+//        @SerializedName("en") val en: String
+//    )
 
     private fun getStarsFileNameByLocation(): String {
         return "stars.6.json"
@@ -173,5 +245,29 @@ private data class StarProperties(@SerializedName("mag") val mag: Double)
 private data class StarGeometry(@SerializedName("coordinates") val coordinates: List<Double>)
 
 private data class ConstellationFeatureCollection(@SerializedName("features") val features: List<ConstellationFeature>)
-private data class ConstellationFeature(@SerializedName("geometry") val geometry: ConstellationGeometry)
+//private data class ConstellationFeature(@SerializedName("geometry") val geometry: ConstellationGeometry)
 private data class ConstellationGeometry(@SerializedName("coordinates") val coordinates: List<List<List<Double>>>)
+
+private data class ConstellationFeature(
+    @SerializedName("id") val id: String,          // <-- tutaj String
+    @SerializedName("properties") val properties: ConstellationProperties,
+    @SerializedName("geometry") val geometry: ConstellationGeometry
+)
+
+private data class ConstellationProperties(
+    @SerializedName("en") val en: String           // <-- angielska nazwa konstelacji
+    // możesz dodać też inne języki np. la, ar, zh, itp.
+)
+
+private data class ConstellationLineFeatureCollection(
+    @SerializedName("features") val features: List<ConstellationLineFeature>
+)
+
+private data class ConstellationLineFeature(
+    @SerializedName("geometry") val geometry: ConstellationGeometry
+)
+
+private data class ConstellationNameProperties(
+    @SerializedName("en") val en: String,
+    @SerializedName("display") val display: List<Double>? // opcjonalne, bo nie każda konstelacja musi mieć
+)

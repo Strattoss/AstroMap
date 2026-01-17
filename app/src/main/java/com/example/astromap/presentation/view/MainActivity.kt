@@ -32,17 +32,21 @@ class MainActivity : AppCompatActivity() {
         val constellations = viewModel.loadConstellations()
 
         skyView = SkyView(this, stars, constellations)
+        labelView = StarLabelView(this)
+
+        labelView.stars = stars
+        labelView.constellations = constellations
+        labelView.renderer = skyView.renderer
+
         skyView.setOnRotationChangeListener {
             labelView.invalidate()
         }
-
-        labelView.stars = stars
-        labelView.renderer = skyView.renderer
 
         val skyViewComponents = SkyViewComponents(this)
         val container = skyViewComponents.setupLayout(skyView, labelView, sensorController)
         setContentView(container)
     }
+
 
     override fun onResume() {
         super.onResume()
