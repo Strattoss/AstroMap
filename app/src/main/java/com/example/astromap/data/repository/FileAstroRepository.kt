@@ -48,14 +48,20 @@ class FileAstroRepository(private val context: Context) : IAstroRepository {
 
             val bvColor = f.properties.bv?.toDoubleOrNull()
 
-            val name = if (f.properties.mag <= 2.5) {
-                // szukamy nazwy tylko dla jasnych gwiazd
-                nameMap.entries.firstOrNull { (key, _) ->
-                    val dRA = key.first - ra
-                    val dDec = key.second - dec
-                    (dRA*dRA + dDec*dDec) < 0.01*0.01
-                }?.value
-            } else null  // słabe gwiazdy – nazwa = null
+//            val name = if (f.properties.mag <= 2.5) {
+//                // szukamy nazwy tylko dla jasnych gwiazd
+//                nameMap.entries.firstOrNull { (key, _) ->
+//                    val dRA = key.first - ra
+//                    val dDec = key.second - dec
+//                    (dRA*dRA + dDec*dDec) < 0.01*0.01
+//                }?.value
+//            } else null  // słabe gwiazdy – nazwa = null
+            val name = nameMap.entries.firstOrNull { (key, _) ->
+                val dRA = key.first - ra
+                val dDec = key.second - dec
+                (dRA*dRA + dDec*dDec) < 0.01*0.01
+            }?.value  // <- zawsze dajemy nazwę, nawet dla słabszych gwiazd
+
 
             Star(
                 id = f.id,
@@ -66,6 +72,7 @@ class FileAstroRepository(private val context: Context) : IAstroRepository {
                 bval = bvColor
             )
         }
+
     }
 
     private fun parseConstellations(fileName: String): List<Constellation> {

@@ -15,6 +15,8 @@ class StarLabelView(context: Context) : View(context) {
     var constellations: List<Constellation> = emptyList()
     var renderer: SkyRenderer? = null
 
+    var MAG_THRESH = 2.5
+
     private val starPaint = Paint().apply {
         color = Color.WHITE
         textSize = 28f
@@ -37,8 +39,10 @@ class StarLabelView(context: Context) : View(context) {
         // Nazwy gwiazd (białe)
         for (star in stars) {
             val name = star.name ?: continue
+            if (star.mag > MAG_THRESH) continue
             val pos = r.projectStarToScreen(star.ra, star.dec, screenWidth, screenHeight) ?: continue
             canvas.drawText(name, pos.first, pos.second, starPaint)
+
         }
 
         // Nazwy konstelacji (żółte)
