@@ -5,5 +5,6 @@ data class Star(
     val ra: Double,
     val dec: Double,
     val mag: Double,
-    val name: String? = null
+    val name: String? = null,
+    val bval: Double? = null
 )

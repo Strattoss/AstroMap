@@ -21,11 +21,22 @@ class SkyRenderer(
 
     // --- OpenGL handles ---
     private var program = 0
+
+    private var starProgram = 0
+    private var lineProgram = 0
+
     private var positionHandle = 0
     private var magnitudeHandle = 0
     private var mvpMatrixHandle = 0
+
+    private var linePositionHandle = 0
+    private var lineMvpMatrixHandle = 0
+
+    private var colorHandle = 0
     private lateinit var vertexBuffer: FloatBuffer
     private lateinit var magnitudeBuffer: FloatBuffer
+
+    private lateinit var colorBuffer: FloatBuffer
 
     // --- Matrices ---
     private val projectionMatrix = FloatArray(16)
@@ -37,6 +48,8 @@ class SkyRenderer(
     private val starCoords = FloatArray(stars.size * 3)
     private val starMagnitudes = FloatArray(stars.size)
 
+    private val starColors = FloatArray(stars.size * 3)
+
     init {
         for (i in stars.indices) {
             val xyz = raDecToXYZ(stars[i].ra, stars[i].dec)
@@ -44,6 +57,13 @@ class SkyRenderer(
             starCoords[i * 3 + 1] = xyz[1]
             starCoords[i * 3 + 2] = xyz[2]
             starMagnitudes[i] = stars[i].mag.toFloat()
+
+            val bv = stars[i].bval ?: 0.65   // Słońce jako fallback
+            val temp = bvToTemperature(bv)
+            val rgb = temperatureToRGB(temp)
+            starColors[i * 3] = rgb[0]
+            starColors[i * 3 + 1] = rgb[1]
+            starColors[i * 3 + 2] = rgb[2]
         }
         Matrix.setIdentityM(rotationMatrix, 0)
     }
@@ -68,32 +88,69 @@ class SkyRenderer(
 
         vertexBuffer = createFloatBuffer(starCoords)
         magnitudeBuffer = createFloatBuffer(starMagnitudes)
+        colorBuffer = createFloatBuffer(starColors)
 
-        val vertexShaderCode = """
+        // ===== STARS =====
+        val starVertexShader = """
             uniform mat4 uMVPMatrix;
             attribute vec4 vPosition;
             attribute float aMagnitude;
+            attribute vec3 aColor;
+    
+            varying vec3 vColor;
+    
             void main() {
                 gl_Position = uMVPMatrix * vPosition;
-                
-                float size = 7.4 * pow(2.0, -0.28 * aMagnitude); // approx mapping: -1.5 mag -> 10, 6 mag -> 2
-                size = clamp(size, 2.0, 10.0);
+    
+                float size = 12.0 * pow(2.0, -0.25 * aMagnitude);
+                size = clamp(size, 6.0, 24.0);
                 gl_PointSize = size;
+    
+                vColor = aColor;
             }
         """
 
-        val fragmentShaderCode = """
+        val starFragmentShader = """
+            precision mediump float;
+            varying vec3 vColor;
+    
+            void main() {
+                float d = distance(gl_PointCoord, vec2(0.5));
+                if (d > 0.5) discard;
+                gl_FragColor = vec4(vColor, 1.0);
+            }
+        """
+
+        starProgram = ShaderUtils.createProgram(starVertexShader, starFragmentShader)
+
+        positionHandle = GLES20.glGetAttribLocation(starProgram, "vPosition")
+        magnitudeHandle = GLES20.glGetAttribLocation(starProgram, "aMagnitude")
+        colorHandle = GLES20.glGetAttribLocation(starProgram, "aColor")
+        mvpMatrixHandle = GLES20.glGetUniformLocation(starProgram, "uMVPMatrix")
+
+        // ===== CONSTELLATION LINES =====
+        val lineVertexShader = """
+            uniform mat4 uMVPMatrix;
+            attribute vec4 vPosition;
+    
+            void main() {
+                gl_Position = uMVPMatrix * vPosition;
+            }
+        """
+
+        val lineFragmentShader = """
             precision mediump float;
             void main() {
-                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+                gl_FragColor = vec4(1.0);
             }
         """
 
-        program = ShaderUtils.createProgram(vertexShaderCode, fragmentShaderCode)
-        positionHandle = GLES20.glGetAttribLocation(program, "vPosition")
-        mvpMatrixHandle = GLES20.glGetUniformLocation(program, "uMVPMatrix")
-        magnitudeHandle = GLES20.glGetAttribLocation(program, "aMagnitude")
+        lineProgram = ShaderUtils.createProgram(lineVertexShader, lineFragmentShader)
+
+        linePositionHandle = GLES20.glGetAttribLocation(lineProgram, "vPosition")
+        lineMvpMatrixHandle = GLES20.glGetUniformLocation(lineProgram, "uMVPMatrix")
     }
+
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
         GLES20.glViewport(0, 0, width, height)
@@ -116,7 +173,10 @@ class SkyRenderer(
         Matrix.multiplyMM(finalMatrix, 0, viewMatrix, 0, rotationMatrix, 0)
         Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, finalMatrix, 0)
 
+        GLES20.glUseProgram(starProgram)
         drawStars()
+
+        GLES20.glUseProgram(lineProgram)
         drawConstellationLines()
     }
 
@@ -127,14 +187,22 @@ class SkyRenderer(
         GLES20.glEnableVertexAttribArray(magnitudeHandle)
         GLES20.glVertexAttribPointer(magnitudeHandle, 1, GLES20.GL_FLOAT, false, 0, magnitudeBuffer)
 
+        GLES20.glEnableVertexAttribArray(colorHandle)
+        GLES20.glVertexAttribPointer(colorHandle, 3, GLES20.GL_FLOAT, false, 0, colorBuffer)
+
         GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0)
         GLES20.glDrawArrays(GLES20.GL_POINTS, 0, stars.size)
 
         GLES20.glDisableVertexAttribArray(positionHandle)
         GLES20.glDisableVertexAttribArray(magnitudeHandle)
+        GLES20.glDisableVertexAttribArray(colorHandle)
+
+
+
     }
 
     private fun drawConstellationLines() {
+        GLES20.glLineWidth(3.0f)
         for (constellation in constellations) {
             for (line in constellation.lines) {
                 val startXYZ = raDecToXYZ(line.first.ra, line.first.dec)
@@ -143,17 +211,11 @@ class SkyRenderer(
                 val arcBuffer = createFloatBuffer(arcPoints)
 
                 GLES20.glEnableVertexAttribArray(positionHandle)
-                GLES20.glVertexAttribPointer(
-                    positionHandle,
-                    3,
-                    GLES20.GL_FLOAT,
-                    false,
-                    0,
-                    arcBuffer
-                )
+                GLES20.glVertexAttribPointer(positionHandle, 3, GLES20.GL_FLOAT, false, 0, arcBuffer)
                 GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0)
                 GLES20.glDrawArrays(GLES20.GL_LINE_STRIP, 0, arcPoints.size / 3)
                 GLES20.glDisableVertexAttribArray(positionHandle)
+
             }
         }
     }
@@ -223,9 +285,6 @@ class SkyRenderer(
         // sprawdza czy MVP matrix został obliczony
         return mvpMatrix.any { it != 0f }
     }
-
-
-
 }
 
 private fun columnToOpposite(matrix: FloatArray, columnIndex: Int) {
@@ -247,3 +306,58 @@ private fun getMatrixWithProperControls(rotationMatrix: FloatArray): FloatArray 
     columnToOpposite(flipped, 0)
     return flipped
 }
+
+private fun bvToRGB(bv: Double?): FloatArray {
+    // prosta konwersja B-V na RGB (Blue->White->Red)
+    val clamped = bv?.coerceIn(-0.4, 2.0) ?: 0.0
+    val t = (clamped + 0.4) / (2.0 + 0.4)
+    val r = (1.0 * t + 1.0*(1-t) * 1.0).toFloat()
+    val g = (1.0 * (1-t) + 1.0 * t).toFloat()
+    val b = (1.0 * (1-t)).toFloat()
+    return floatArrayOf(r, g, b)
+}
+
+fun bvToTemperature(bv: Double): Double {
+    return 4600.0 * (
+            1.0 / (0.92 * bv + 1.7) +
+                    1.0 / (0.92 * bv + 0.62)
+            )
+}
+
+fun temperatureToRGB(temp: Double): FloatArray {
+    val t = (temp / 100.0).coerceIn(10.0, 400.0)
+
+    var r: Double
+    var g: Double
+    var b: Double
+
+    // RED
+    r = if (t <= 66) {
+        255.0
+    } else {
+        329.698727446 * Math.pow(t - 60, -0.1332047592)
+    }
+
+    // GREEN
+    g = if (t <= 66) {
+        99.4708025861 * Math.log(t) - 161.1195681661
+    } else {
+        288.1221695283 * Math.pow(t - 60, -0.0755148492)
+    }
+
+    // BLUE
+    b = if (t >= 66) {
+        255.0
+    } else if (t <= 19) {
+        0.0
+    } else {
+        138.5177312231 * Math.log(t - 10) - 305.0447927307
+    }
+
+    return floatArrayOf(
+        (r / 255.0).coerceIn(0.0, 1.0).toFloat(),
+        (g / 255.0).coerceIn(0.0, 1.0).toFloat(),
+        (b / 255.0).coerceIn(0.0, 1.0).toFloat()
+    )
+}
+

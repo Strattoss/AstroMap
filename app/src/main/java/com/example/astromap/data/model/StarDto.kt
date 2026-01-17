@@ -7,6 +7,6 @@ data class StarDto(
     val mag: Double,   // Apparent magnitude (brightness) (https://en.wikipedia.org/wiki/Magnitude_(astronomy))
 
     // TODO: add B-V color index (because it's in the json data)
-//    val bvColor: Double,
+    val bvColor: Double,
     val name: String
 )
