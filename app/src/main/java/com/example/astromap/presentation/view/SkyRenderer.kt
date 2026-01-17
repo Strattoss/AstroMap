@@ -200,6 +200,32 @@ class SkyRenderer(
         }
         return points
     }
+
+    fun projectStarToScreen(ra: Double, dec: Double, screenWidth: Int, screenHeight: Int): Pair<Float, Float>? {
+        val xyz = raDecToXYZ(ra, dec)
+        val vec = floatArrayOf(xyz[0], xyz[1], xyz[2], 1f)
+
+        val result = FloatArray(4)
+        Matrix.multiplyMV(result, 0, mvpMatrix, 0, vec, 0)
+
+        if (result[3] <= 0f) return null // gwiazda za kamerą
+
+        val ndcX = result[0] / result[3]
+        val ndcY = result[1] / result[3]
+
+        val x = (ndcX * 0.5f + 0.5f) * screenWidth
+        val y = (1f - (ndcY * 0.5f + 0.5f)) * screenHeight
+
+        return Pair(x, y)
+    }
+
+    fun isInitialized(): Boolean {
+        // sprawdza czy MVP matrix został obliczony
+        return mvpMatrix.any { it != 0f }
+    }
+
+
+
 }
 
 private fun columnToOpposite(matrix: FloatArray, columnIndex: Int) {

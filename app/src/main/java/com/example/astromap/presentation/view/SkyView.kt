@@ -13,6 +13,7 @@ class SkyView(
 ) : GLSurfaceView(context) {
 
     val renderer: SkyRenderer
+    private var onRotationChangeListener: (() -> Unit)? = null
 
     private var previousX = 0f
     private var previousY = 0f
@@ -21,6 +22,10 @@ class SkyView(
         setEGLContextClientVersion(2)
         renderer = SkyRenderer(stars, constellations)
         setRenderer(renderer)
+    }
+
+    fun setOnRotationChangeListener(listener: () -> Unit) {
+        onRotationChangeListener = listener
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -35,6 +40,7 @@ class SkyView(
                 val dy = y - previousY
 
                 renderer.rotateWithTouch(dx * TOUCH_SCALE_FACTOR, dy * TOUCH_SCALE_FACTOR)
+                onRotationChangeListener?.invoke()
                 requestRender()
             }
         }
@@ -46,6 +52,7 @@ class SkyView(
 
     fun updateRotation(rotationMatrix: FloatArray) {
         renderer.updateRotation(rotationMatrix)
+        onRotationChangeListener?.invoke()
         requestRender()
     }
 

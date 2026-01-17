@@ -11,11 +11,16 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 
 class SkyViewComponents(private val context: Context) {
 
-    fun setupLayout(skyView: SkyView, sensorController: SensorController): FrameLayout {
+    fun setupLayout(
+        skyView: SkyView,
+        labelView: StarLabelView,
+        sensorController: SensorController
+    ): FrameLayout {
         val container = FrameLayout(context)
         container.addView(skyView)
+        container.addView(labelView)
 
-        val explorationSwitch = createExplorationModeSwitch(skyView, sensorController)
+        val explorationSwitch = createExplorationModeSwitch(skyView, labelView, sensorController)
         container.addView(explorationSwitch)
 
         ViewCompat.setOnApplyWindowInsetsListener(container) { _, insets ->
@@ -31,6 +36,7 @@ class SkyViewComponents(private val context: Context) {
 
     private fun createExplorationModeSwitch(
         skyView: SkyView,
+        labelView: StarLabelView,
         sensorController: SensorController
     ): SwitchMaterial {
         return SwitchMaterial(context).apply {
@@ -54,6 +60,7 @@ class SkyViewComponents(private val context: Context) {
                 } else {
                     sensorController.stop()
                 }
+                labelView.invalidate()
             }
         }
     }

@@ -30,7 +30,8 @@ class FileAstroRepository(private val context: Context) : IAstroRepository {
                 id = it.id,
                 ra = it.geometry.coordinates[0],
                 dec = it.geometry.coordinates[1],
-                mag = it.properties.mag
+                mag = it.properties.mag,
+                name = if (it.properties.mag < 2.5) "Star ${it.id}" else null // Placeholder: name only bright stars
             )
         }
     }
@@ -61,7 +62,6 @@ class FileAstroRepository(private val context: Context) : IAstroRepository {
                         lines.add(Pair(fromStar, toStar))
                     } else {
                         Log.w("astroMap", "Star not found: $fromRa, $fromDec or $toRa, $toDec")
-                        // TODO: later we should probably modify this approach - we won't render such constellations fully
                     }
                 }
             }
@@ -70,12 +70,10 @@ class FileAstroRepository(private val context: Context) : IAstroRepository {
     }
 
     private fun getStarsFileNameByLocation(): String {
-        // TODO: Implementation for location
         return "stars.6.json"
     }
 
     private fun getConstellationsFileNameByLocation(): String {
-        // TODO: Implementation for location
         return "constellations.lines.json"
     }
 }
