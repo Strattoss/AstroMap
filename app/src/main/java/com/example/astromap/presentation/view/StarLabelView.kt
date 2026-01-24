@@ -15,6 +15,12 @@ class StarLabelView(context: Context) : View(context) {
     var constellations: List<Constellation> = emptyList()
     var renderer: SkyRenderer? = null
 
+    var showStarLabels = true
+
+    var showConstellationLabels = true
+
+    var onStarClicked: ((Star) -> Unit)? = null
+
     private val starPaint = Paint().apply {
         color = Color.WHITE
         textSize = 28f
@@ -34,20 +40,25 @@ class StarLabelView(context: Context) : View(context) {
         val screenWidth = width
         val screenHeight = height
 
-        // Nazwy gwiazd (białe)
-        for (star in stars) {
-            val name = star.name ?: continue
-            val pos = r.projectStarToScreen(star.ra, star.dec, screenWidth, screenHeight) ?: continue
-            canvas.drawText(name, pos.first, pos.second, starPaint)
+        if (showStarLabels) {
+            // Nazwy gwiazd (białe)
+            for (star in stars) {
+                val name = star.name ?: continue
+                val pos =
+                    r.projectStarToScreen(star.ra, star.dec, screenWidth, screenHeight) ?: continue
+                canvas.drawText(name, pos.first, pos.second, starPaint)
+            }
         }
 
-        // Nazwy konstelacji (żółte)
-        for (constellation in constellations) {
-            val name = constellation.name ?: continue
-            val displayCoords = constellation.displayCoords ?: continue
-            val (ra, dec, _) = displayCoords
-            val pos = r.projectStarToScreen(ra, dec, screenWidth, screenHeight) ?: continue
-            canvas.drawText(name, pos.first, pos.second, constellationPaint)
+        if (showConstellationLabels) {
+            // Nazwy konstelacji (żółte)
+            for (constellation in constellations) {
+                val name = constellation.name ?: continue
+                val displayCoords = constellation.displayCoords ?: continue
+                val (ra, dec, _) = displayCoords
+                val pos = r.projectStarToScreen(ra, dec, screenWidth, screenHeight) ?: continue
+                canvas.drawText(name, pos.first, pos.second, constellationPaint)
+            }
         }
     }
 }
