@@ -19,6 +19,8 @@ class SkyRenderer(
 
     var explorationModeEnabled = false
 
+    var starClickEnabled = false
+
     // --- OpenGL handles ---
     private var program = 0
 

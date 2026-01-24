@@ -1,6 +1,7 @@
 package com.example.astromap.presentation.view
 
 import android.os.Bundle
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.astromap.data.repository.FileAstroRepository
 import com.example.astromap.presentation.viewmodel.SkyViewModel
@@ -40,6 +41,19 @@ class MainActivity : AppCompatActivity() {
 
         skyView.setOnRotationChangeListener {
             labelView.invalidate()
+        }
+
+        skyView.setOnStarClickListener { star ->
+            AlertDialog.Builder(this)
+                .setTitle(star.name ?: "Unknown")
+                .setMessage("""
+            Mag: ${star.mag}
+            B-V: ${star.bval ?: "N/A"}
+            RA: ${star.ra}
+            Dec: ${star.dec}
+        """.trimIndent())
+                .setPositiveButton("OK", null)
+                .show()
         }
 
         val skyViewComponents = SkyViewComponents(this)
