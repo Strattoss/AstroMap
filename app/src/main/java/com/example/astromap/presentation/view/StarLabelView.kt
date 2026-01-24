@@ -19,7 +19,7 @@ class StarLabelView(context: Context) : View(context) {
 
     var showConstellationLabels = true
 
-    var onStarClicked: ((Star) -> Unit)? = null
+//    var onStarClicked: ((Star) -> Unit)? = null
 
     var MAG_THRESH = 2.5
 

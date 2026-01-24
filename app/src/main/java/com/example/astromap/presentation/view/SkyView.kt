@@ -17,6 +17,8 @@ class SkyView(
 
     private var onStarClicked: ((Star) -> Unit)? = null
 
+    var starClickEnabled = false
+
     private var previousX = 0f
     private var previousY = 0f
 
@@ -26,12 +28,6 @@ class SkyView(
         setRenderer(renderer)
 //        renderMode = RENDERMODE_CONTINUOUSLY;
 
-        setOnTouchListener { _, event ->
-            if (!renderer.explorationModeEnabled && event.action == MotionEvent.ACTION_DOWN) {
-                handleTouch(event.x, event.y)
-            }
-            true
-        }
     }
 
     fun setOnRotationChangeListener(listener: () -> Unit) {
@@ -43,19 +39,28 @@ class SkyView(
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (renderer.explorationModeEnabled) return false
-
         val x = event.x
         val y = event.y
 
-        when (event.action) {
-            MotionEvent.ACTION_MOVE -> {
-                val dx = x - previousX
-                val dy = y - previousY
+        // 1️⃣ Exploration Mode włączony → nic nie robimy
+        if (renderer.explorationModeEnabled) return false
 
-                renderer.rotateWithTouch(dx * TOUCH_SCALE_FACTOR, dy * TOUCH_SCALE_FACTOR)
-                onRotationChangeListener?.invoke()
-                requestRender()
+        // 2️⃣ Obsługa kliknięcia w gwiazdę
+        if (starClickEnabled && event.action == MotionEvent.ACTION_DOWN) {
+            handleTouch(x, y)
+            return true
+        }
+
+        // 3️⃣ Obracanie ekranu, jeśli kliknięcia są wyłączone
+        if (!starClickEnabled) {
+            when (event.action) {
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = x - previousX
+                    val dy = y - previousY
+                    renderer.rotateWithTouch(dx * TOUCH_SCALE_FACTOR, dy * TOUCH_SCALE_FACTOR)
+                    onRotationChangeListener?.invoke()
+                    requestRender()
+                }
             }
         }
 

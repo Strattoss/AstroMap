@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">AstroMap</string>
     <string name="exploration_mode">Exploration mode</string>
-    <string name="star_names">Star names</string>
-    <string name="constellation_names">Constellation names</string>
+    <string name="show_star_labels">Show Star Names</string>
+    <string name="show_constellation_labels">Show Constellation Names</string>
+    <string name="enable_star_clicks">Enable Star Clicks</string>
 </resources>

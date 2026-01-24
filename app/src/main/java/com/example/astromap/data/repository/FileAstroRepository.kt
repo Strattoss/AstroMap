@@ -199,7 +199,6 @@ private data class ConstellationFeature(
 
 private data class ConstellationProperties(
     @SerializedName("en") val en: String           // <-- angielska nazwa konstelacji
-    // możesz dodać też inne języki np. la, ar, zh, itp.
 )
 
 private data class ConstellationLineFeatureCollection(
