@@ -5,6 +5,7 @@ import android.opengl.GLSurfaceView
 import android.view.MotionEvent
 import com.example.astromap.domain.model.Constellation
 import com.example.astromap.domain.model.Star
+import com.example.astromap.presentation.sensors.ObservationSnapshot
 
 class SkyView(
     context: Context,
@@ -72,6 +73,17 @@ class SkyView(
         renderer.updateRotation(rotationMatrix)
         onRotationChangeListener?.invoke()
         requestRender()
+    }
+
+    fun updateObservation(snapshot: ObservationSnapshot) {
+        val skyMatrix = AstroMath.skyOrientationMatrix(
+            snapshot.latitude,
+            snapshot.longitude,
+            snapshot.timeUtc
+        )
+
+        renderer.updateSkyOrientation(skyMatrix)
+        updateRotation(snapshot.rotationMatrix)
     }
 
     companion object {

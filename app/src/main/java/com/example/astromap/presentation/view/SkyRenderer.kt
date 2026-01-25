@@ -45,6 +45,7 @@ class SkyRenderer(
     private val viewMatrix = FloatArray(16)
     private val mvpMatrix = FloatArray(16)
     private var rotationMatrix = FloatArray(16)
+    private val skyOrientationMatrix = FloatArray(16)
 
     // --- Precomputed star positions ---
     private val starCoords = FloatArray(stars.size * 3)
@@ -68,10 +69,15 @@ class SkyRenderer(
             starColors[i * 3 + 2] = rgb[2]
         }
         Matrix.setIdentityM(rotationMatrix, 0)
+        Matrix.setIdentityM(skyOrientationMatrix, 0)
     }
 
     fun updateRotation(rotationMatrix: FloatArray) {
         this.rotationMatrix = getMatrixWithProperControls(rotationMatrix)
+    }
+
+    fun updateSkyOrientation(matrix: FloatArray) {
+        System.arraycopy(matrix, 0, skyOrientationMatrix, 0, 16)
     }
 
     fun rotateWithTouch(dx: Float, dy: Float) {
@@ -172,7 +178,9 @@ class SkyRenderer(
         )
 
         val finalMatrix = FloatArray(16)
-        Matrix.multiplyMM(finalMatrix, 0, viewMatrix, 0, rotationMatrix, 0)
+        val tmp = FloatArray(16)
+        Matrix.multiplyMM(tmp, 0, rotationMatrix, 0, skyOrientationMatrix, 0)
+        Matrix.multiplyMM(finalMatrix, 0, viewMatrix, 0, tmp, 0)
         Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, finalMatrix, 0)
 
         GLES20.glUseProgram(starProgram)
@@ -198,9 +206,6 @@ class SkyRenderer(
         GLES20.glDisableVertexAttribArray(positionHandle)
         GLES20.glDisableVertexAttribArray(magnitudeHandle)
         GLES20.glDisableVertexAttribArray(colorHandle)
-
-
-
     }
 
     private fun drawConstellationLines() {

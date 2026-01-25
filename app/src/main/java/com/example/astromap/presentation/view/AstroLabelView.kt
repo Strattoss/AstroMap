@@ -10,9 +10,9 @@ import com.example.astromap.domain.model.Star
 
 class AstroLabelView(
     context: Context,
-    var stars: List<Star> = emptyList(),
-    var constellations: List<Constellation> = emptyList(),
-    var renderer: SkyRenderer? = null
+    val stars: List<Star> = emptyList(),
+    val constellations: List<Constellation> = emptyList(),
+    val renderer: SkyRenderer? = null
 ) : View(context) {
 
     var showStarLabels = true

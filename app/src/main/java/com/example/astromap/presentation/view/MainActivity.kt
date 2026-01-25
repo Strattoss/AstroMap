@@ -1,26 +1,37 @@
 package com.example.astromap.presentation.view
 
+import android.Manifest
 import android.os.Bundle
+import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.astromap.data.repository.FileAstroRepository
+import com.example.astromap.presentation.sensors.ObservationController
 import com.example.astromap.presentation.viewmodel.SkyViewModel
 
 class MainActivity : AppCompatActivity() {
     private lateinit var skyView: SkyView
     private lateinit var viewModel: SkyViewModel
-    private lateinit var sensorController: SensorController
+    private lateinit var observationController: ObservationController
     private lateinit var labelView: AstroLabelView
+
+    private lateinit var locationPermissionHelper: LocationPermissionHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        locationPermissionHelper = LocationPermissionHelper(this)
+
+        if (!locationPermissionHelper.hasPermission()) {
+            locationPermissionHelper.request()
+        }
+
         val astroRepo = FileAstroRepository(this)
         viewModel = SkyViewModel(astroRepo)
 
-        sensorController = SensorController(this) { rotationMatrix ->
+        observationController = ObservationController(this) { snapshot ->
             if (::skyView.isInitialized) {
-                skyView.updateRotation(rotationMatrix)
+                skyView.updateObservation(snapshot)
             }
         }
 
@@ -33,10 +44,6 @@ class MainActivity : AppCompatActivity() {
 
         skyView = SkyView(this, stars, constellations)
         labelView = AstroLabelView(this, stars, constellations, skyView.renderer)
-
-        labelView.stars = stars
-        labelView.constellations = constellations
-        labelView.renderer = skyView.renderer
 
         skyView.setOnRotationChangeListener {
             labelView.invalidate()
@@ -56,17 +63,18 @@ class MainActivity : AppCompatActivity() {
         }
 
         val skyViewComponents = SkyViewComponents(this)
-        val container = skyViewComponents.setupLayout(skyView, labelView, sensorController)
+        val container = skyViewComponents.setupLayout(skyView, labelView, observationController)
         setContentView(container)
     }
 
 
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION])
     override fun onResume() {
         super.onResume()
         if (::skyView.isInitialized) {
             skyView.onResume()
             if (skyView.renderer.explorationModeEnabled) {
-                sensorController.start()
+                observationController.start()
             }
         }
     }
@@ -76,6 +84,6 @@ class MainActivity : AppCompatActivity() {
         if (::skyView.isInitialized) {
             skyView.onPause()
         }
-        sensorController.stop()
+        observationController.stop()
     }
 }
