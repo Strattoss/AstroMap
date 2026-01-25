@@ -17,7 +17,9 @@ class AstroLabelView(
 
     var showStarLabels = true
     var showConstellationLabels = true
-    var MAG_THRESH = 2.5
+//    var MAG_THRESH = 2.5
+
+    var magnitudeThreshold: Double = 2.5
 
     private val starPaint = Paint().apply {
         color = Color.WHITE
@@ -42,7 +44,7 @@ class AstroLabelView(
             // Nazwy gwiazd (białe)
             for (star in stars) {
                 val name = star.name ?: continue
-                if (star.mag > MAG_THRESH) continue
+                if (star.mag > magnitudeThreshold) continue
                 val pos =
                     r.projectStarToScreen(star.ra, star.dec, screenWidth, screenHeight) ?: continue
                 canvas.drawText(name, pos.first, pos.second, starPaint)
