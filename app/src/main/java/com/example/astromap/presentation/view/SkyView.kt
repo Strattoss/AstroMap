@@ -76,15 +76,15 @@ class SkyView(
     }
 
     fun updateObservation(snapshot: ObservationSnapshot) {
+        val skyMatrix = AstroMath.skyOrientationMatrix(
+            snapshot.latitude,
+            snapshot.longitude,
+            snapshot.timeUtc
+        )
+
+        renderer.updateSkyOrientation(skyMatrix)
         updateRotation(snapshot.rotationMatrix)
-
-        // TODO
-        // You’ll use these next:
-        // snapshot.latitude
-        // snapshot.longitude
-        // snapshot.timeUtc
     }
-
 
     companion object {
         private const val TOUCH_SCALE_FACTOR = 0.1f

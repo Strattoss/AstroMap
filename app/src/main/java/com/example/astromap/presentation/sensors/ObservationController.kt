@@ -44,13 +44,12 @@ class ObservationController(
         val lat = latitude ?: return
         val lon = longitude ?: return
 
-        onSnapshotReady(
-            ObservationSnapshot(
-                rotationMatrix = rot,
-                latitude = lat,
-                longitude = lon,
-                timeUtc = timeProvider.nowUtc()
-            )
+        val observation = ObservationSnapshot(
+            rotationMatrix = rot,
+            latitude = lat,
+            longitude = lon,
+            timeUtc = timeProvider.nowUtc()
         )
+        onSnapshotReady(observation)
     }
 }
