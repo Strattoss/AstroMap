@@ -12,8 +12,8 @@ class ObservationController(
     private val timeProvider = TimeProvider()
 
     private var rotationMatrix: FloatArray? = null
-    private var latitude: Double? = null
-    private var longitude: Double? = null
+    private var latitude: Double? = 50.0 // temp fix
+    private var longitude: Double? = 19.94 // temp fix
 
     private val orientationSensor =
         OrientationSensor(context) {
@@ -28,7 +28,7 @@ class ObservationController(
             emitIfReady()
         }
 
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_COARSE_LOCATION])
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION])
     fun start() {
         orientationSensor.start()
         locationProvider.start()

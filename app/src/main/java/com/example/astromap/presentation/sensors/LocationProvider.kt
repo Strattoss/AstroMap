@@ -15,7 +15,7 @@ class LocationProvider(
     private val locationManager =
         context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_COARSE_LOCATION])
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION])
     fun start() {
         locationManager.requestLocationUpdates(
             LocationManager.GPS_PROVIDER,

@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
         val constellations = viewModel.loadConstellations()
 
         skyView = SkyView(this, stars, constellations)
-        labelView = StarLabelView(this, stars, constellations, skyView.renderer)
+        labelView = AstroLabelView(this, stars, constellations, skyView.renderer)
 
         skyView.setOnRotationChangeListener {
             labelView.invalidate()
@@ -68,7 +68,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_COARSE_LOCATION])
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION])
     override fun onResume() {
         super.onResume()
         if (::skyView.isInitialized) {
