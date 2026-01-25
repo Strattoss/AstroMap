@@ -13,6 +13,11 @@ class SkyView(
 ) : GLSurfaceView(context) {
 
     val renderer: SkyRenderer
+    private var onRotationChangeListener: (() -> Unit)? = null
+
+    private var onStarClicked: ((Star) -> Unit)? = null
+
+    var starClickEnabled = false
 
     private var previousX = 0f
     private var previousY = 0f
@@ -21,21 +26,40 @@ class SkyView(
         setEGLContextClientVersion(2)
         renderer = SkyRenderer(stars, constellations)
         setRenderer(renderer)
+
+    }
+
+    fun setOnRotationChangeListener(listener: () -> Unit) {
+        onRotationChangeListener = listener
+    }
+
+    fun setOnStarClickListener(listener: (Star) -> Unit) {
+        onStarClicked = listener
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (renderer.explorationModeEnabled) return false
-
         val x = event.x
         val y = event.y
 
-        when (event.action) {
-            MotionEvent.ACTION_MOVE -> {
-                val dx = x - previousX
-                val dy = y - previousY
+        // 1️⃣ Exploration Mode włączony → nic nie robimy
+        if (renderer.explorationModeEnabled) return false
 
-                renderer.rotateWithTouch(dx * TOUCH_SCALE_FACTOR, dy * TOUCH_SCALE_FACTOR)
-                requestRender()
+        // 2️⃣ Obsługa kliknięcia w gwiazdę
+        if (starClickEnabled && event.action == MotionEvent.ACTION_DOWN) {
+            handleTouch(x, y)
+            return true
+        }
+
+        // 3️⃣ Obracanie ekranu, jeśli kliknięcia są wyłączone
+        if (!starClickEnabled) {
+            when (event.action) {
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = x - previousX
+                    val dy = y - previousY
+                    renderer.rotateWithTouch(dx * TOUCH_SCALE_FACTOR, dy * TOUCH_SCALE_FACTOR)
+                    onRotationChangeListener?.invoke()
+                    requestRender()
+                }
             }
         }
 
@@ -46,10 +70,31 @@ class SkyView(
 
     fun updateRotation(rotationMatrix: FloatArray) {
         renderer.updateRotation(rotationMatrix)
+        onRotationChangeListener?.invoke()
         requestRender()
     }
 
     companion object {
         private const val TOUCH_SCALE_FACTOR = 0.1f
+    }
+
+    private fun handleTouch(x: Float, y: Float) {
+        // szukamy gwiazdy najbliższej kliknięciu
+        val thresholdPx = 50  // tolerancja w pikselach
+        var closest: Star? = null
+        var minDist = Float.MAX_VALUE
+
+        for (star in stars) {
+            val screenPos = renderer.projectStarToScreen(star.ra, star.dec, width, height) ?: continue
+            val dx = screenPos.first - x
+            val dy = screenPos.second - y
+            val dist = dx*dx + dy*dy
+            if (dist < minDist && dist < thresholdPx*thresholdPx) {
+                minDist = dist
+                closest = star
+            }
+        }
+
+        closest?.let { onStarClicked?.invoke(it) }
     }
 }

@@ -30,6 +30,8 @@ class RandomAstroRepository(numStars: Int, numConstellations: Int) : IAstroRepos
         val fromStar = stars[fromId]
         val toStar = stars[toId]
 
-        return Constellation(setOf(fromStar, toStar), setOf(Pair(fromStar, toStar)))
+        val name = "Constellation $fromId-$toId"
+
+        return Constellation(name, setOf(fromStar, toStar), setOf(Pair(fromStar, toStar)))
     }
 }
