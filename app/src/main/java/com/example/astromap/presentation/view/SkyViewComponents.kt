@@ -122,14 +122,22 @@ class SkyViewComponents(private val context: Context) {
             textSize = 12f
         }
 
+        val minMag = -3.0
+        val maxMag = 7.0
+        val step = 0.1
+        val startMag = 2.5
+
+        val seekBarMax = ((maxMag - minMag) / step).toInt()
+        val initialProgress = ((startMag / step).toInt())
+
         val seekBar = SeekBar(context).apply {
-            max = 60            // 0–6 w krokach 0.1
-            progress = 25       // 2.5
+            max = seekBarMax
+            progress = initialProgress
         }
 
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
-                val value = progress / 10.0
+                val value = minMag + progress * step
                 labelView.magnitudeThreshold = value
                 title.text = "Magnitude ≤ %.1f".format(value)
                 labelView.invalidate()
