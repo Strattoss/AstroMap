@@ -8,6 +8,10 @@ import android.widget.LinearLayout
 import com.example.astromap.R
 import com.google.android.material.switchmaterial.SwitchMaterial
 
+import android.widget.SeekBar
+import android.widget.TextView
+
+
 class SkyViewComponents(private val context: Context) {
 
     fun setupLayout(
@@ -22,7 +26,11 @@ class SkyViewComponents(private val context: Context) {
         // ---- LinearLayout w prawym dolnym rogu na switche ----
         val switchContainer = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
+
             setPadding(16, 16, 16, 16)
+
+            setBackgroundColor(0xCC000000.toInt())
+
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 FrameLayout.LayoutParams.WRAP_CONTENT
@@ -40,6 +48,8 @@ class SkyViewComponents(private val context: Context) {
         switchContainer.addView(constellationLabelSwitch)
         switchContainer.addView(explorationSwitch)
         switchContainer.addView(starClickSwitch)
+
+        switchContainer.addView(createMagnitudeSlider(labelView))
 
         container.addView(switchContainer)
 
@@ -104,5 +114,46 @@ class SkyViewComponents(private val context: Context) {
             skyView.starClickEnabled = isChecked
         }
     }
+
+    private fun createMagnitudeSlider(labelView: AstroLabelView): LinearLayout {
+        val title = TextView(context).apply {
+            text = "Magnitude ≤ 2.5"
+            setTextColor(Color.WHITE)
+            textSize = 12f
+        }
+
+        val minMag = -3.0
+        val maxMag = 7.0
+        val step = 0.1
+        val startMag = 2.5
+
+        val seekBarMax = ((maxMag - minMag) / step).toInt()
+        val initialProgress = ((startMag / step).toInt())
+
+        val seekBar = SeekBar(context).apply {
+            max = seekBarMax
+            progress = initialProgress
+        }
+
+        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val value = minMag + progress * step
+                labelView.magnitudeThreshold = value
+                title.text = "Magnitude ≤ %.1f".format(value)
+                labelView.invalidate()
+            }
+
+            override fun onStartTrackingTouch(bar: SeekBar?) {}
+            override fun onStopTrackingTouch(bar: SeekBar?) {}
+        })
+
+        return LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(0, 12, 0, 0)
+            addView(title)
+            addView(seekBar)
+        }
+    }
+
 }
 
