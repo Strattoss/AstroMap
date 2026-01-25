@@ -5,6 +5,7 @@ import android.opengl.GLSurfaceView
 import android.view.MotionEvent
 import com.example.astromap.domain.model.Constellation
 import com.example.astromap.domain.model.Star
+import com.example.astromap.presentation.sensors.ObservationSnapshot
 
 class SkyView(
     context: Context,
@@ -73,6 +74,17 @@ class SkyView(
         onRotationChangeListener?.invoke()
         requestRender()
     }
+
+    fun updateObservation(snapshot: ObservationSnapshot) {
+        updateRotation(snapshot.rotationMatrix)
+
+        // TODO
+        // You’ll use these next:
+        // snapshot.latitude
+        // snapshot.longitude
+        // snapshot.timeUtc
+    }
+
 
     companion object {
         private const val TOUCH_SCALE_FACTOR = 0.1f

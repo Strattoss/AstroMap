@@ -1,11 +1,13 @@
 package com.example.astromap.presentation.view
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.view.Gravity
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import com.example.astromap.R
+import com.example.astromap.presentation.sensors.ObservationController
 import com.google.android.material.switchmaterial.SwitchMaterial
 
 import android.widget.SeekBar
@@ -17,7 +19,7 @@ class SkyViewComponents(private val context: Context) {
     fun setupLayout(
         skyView: SkyView,
         labelView: AstroLabelView,
-        sensorController: SensorController
+        observationController: ObservationController
     ): FrameLayout {
         val container = FrameLayout(context)
         container.addView(skyView)
@@ -40,7 +42,7 @@ class SkyViewComponents(private val context: Context) {
         // tworzymy switche
         val starLabelSwitch = createStarLabelSwitch(labelView)
         val constellationLabelSwitch = createConstellationLabelSwitch(labelView)
-        val explorationSwitch = createExplorationModeSwitch(skyView, labelView, sensorController)
+        val explorationSwitch = createExplorationModeSwitch(skyView, labelView, observationController)
         val starClickSwitch = createStarClickSwitch(skyView)
 
         // dodajemy switche do linear layout
@@ -85,7 +87,7 @@ class SkyViewComponents(private val context: Context) {
     private fun createExplorationModeSwitch(
         skyView: SkyView,
         labelView: AstroLabelView,
-        sensorController: SensorController
+        observationController: ObservationController
     ) = SwitchMaterial(context).apply {
         text = context.getString(R.string.exploration_mode)
         setTextColor(Color.WHITE)
@@ -93,9 +95,10 @@ class SkyViewComponents(private val context: Context) {
             FrameLayout.LayoutParams.WRAP_CONTENT,
             FrameLayout.LayoutParams.WRAP_CONTENT
         ).apply { gravity = Gravity.BOTTOM or Gravity.END }
+        @SuppressLint("MissingPermission")
         setOnCheckedChangeListener { _, isChecked ->
             skyView.renderer.explorationModeEnabled = isChecked
-            if (isChecked) sensorController.start() else sensorController.stop()
+            if (isChecked) observationController.start() else observationController.stop()
             labelView.invalidate()
         }
     }
