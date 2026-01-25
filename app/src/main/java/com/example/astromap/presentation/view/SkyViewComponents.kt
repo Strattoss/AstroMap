@@ -5,10 +5,6 @@ import android.graphics.Color
 import android.view.Gravity
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import android.widget.TextView
-import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.example.astromap.R
 import com.google.android.material.switchmaterial.SwitchMaterial
 
@@ -16,7 +12,7 @@ class SkyViewComponents(private val context: Context) {
 
     fun setupLayout(
         skyView: SkyView,
-        labelView: StarLabelView,
+        labelView: AstroLabelView,
         sensorController: SensorController
     ): FrameLayout {
         val container = FrameLayout(context)
@@ -50,7 +46,7 @@ class SkyViewComponents(private val context: Context) {
         return container
     }
 
-    private fun createStarLabelSwitch(labelView: StarLabelView): SwitchMaterial {
+    private fun createStarLabelSwitch(labelView: AstroLabelView): SwitchMaterial {
         return SwitchMaterial(context).apply {
             text = context.getString(R.string.show_star_labels)
             setTextColor(Color.WHITE)
@@ -63,7 +59,7 @@ class SkyViewComponents(private val context: Context) {
     }
 
 
-    private fun createConstellationLabelSwitch(labelView: StarLabelView) = SwitchMaterial(context).apply {
+    private fun createConstellationLabelSwitch(labelView: AstroLabelView) = SwitchMaterial(context).apply {
         text = context.getString(R.string.show_constellation_labels)
         setTextColor(Color.WHITE)
         layoutParams = FrameLayout.LayoutParams(
@@ -78,7 +74,7 @@ class SkyViewComponents(private val context: Context) {
 
     private fun createExplorationModeSwitch(
         skyView: SkyView,
-        labelView: StarLabelView,
+        labelView: AstroLabelView,
         sensorController: SensorController
     ) = SwitchMaterial(context).apply {
         text = context.getString(R.string.exploration_mode)

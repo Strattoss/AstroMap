@@ -4,23 +4,19 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.util.AttributeSet
 import android.view.View
 import com.example.astromap.domain.model.Constellation
 import com.example.astromap.domain.model.Star
 
-class StarLabelView(context: Context) : View(context) {
-
-    var stars: List<Star> = emptyList()
-    var constellations: List<Constellation> = emptyList()
+class AstroLabelView(
+    context: Context,
+    var stars: List<Star> = emptyList(),
+    var constellations: List<Constellation> = emptyList(),
     var renderer: SkyRenderer? = null
+) : View(context) {
 
     var showStarLabels = true
-
     var showConstellationLabels = true
-
-//    var onStarClicked: ((Star) -> Unit)? = null
-
     var MAG_THRESH = 2.5
 
     private val starPaint = Paint().apply {

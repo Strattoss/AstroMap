@@ -309,16 +309,6 @@ private fun getMatrixWithProperControls(rotationMatrix: FloatArray): FloatArray 
     return flipped
 }
 
-private fun bvToRGB(bv: Double?): FloatArray {
-    // prosta konwersja B-V na RGB (Blue->White->Red)
-    val clamped = bv?.coerceIn(-0.4, 2.0) ?: 0.0
-    val t = (clamped + 0.4) / (2.0 + 0.4)
-    val r = (1.0 * t + 1.0*(1-t) * 1.0).toFloat()
-    val g = (1.0 * (1-t) + 1.0 * t).toFloat()
-    val b = (1.0 * (1-t)).toFloat()
-    return floatArrayOf(r, g, b)
-}
-
 fun bvToTemperature(bv: Double): Double {
     return 4600.0 * (
             1.0 / (0.92 * bv + 1.7) +

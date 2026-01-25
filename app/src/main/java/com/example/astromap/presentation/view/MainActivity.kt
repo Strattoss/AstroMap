@@ -10,14 +10,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var skyView: SkyView
     private lateinit var viewModel: SkyViewModel
     private lateinit var sensorController: SensorController
-    private lateinit var labelView: StarLabelView
+    private lateinit var labelView: AstroLabelView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val astroRepo = FileAstroRepository(this)
         viewModel = SkyViewModel(astroRepo)
-        labelView = StarLabelView(this)
 
         sensorController = SensorController(this) { rotationMatrix ->
             if (::skyView.isInitialized) {
@@ -33,7 +32,7 @@ class MainActivity : AppCompatActivity() {
         val constellations = viewModel.loadConstellations()
 
         skyView = SkyView(this, stars, constellations)
-        labelView = StarLabelView(this)
+        labelView = AstroLabelView(this, stars, constellations, skyView.renderer)
 
         labelView.stars = stars
         labelView.constellations = constellations

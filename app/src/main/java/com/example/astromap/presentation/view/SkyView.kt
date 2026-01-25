@@ -26,7 +26,6 @@ class SkyView(
         setEGLContextClientVersion(2)
         renderer = SkyRenderer(stars, constellations)
         setRenderer(renderer)
-//        renderMode = RENDERMODE_CONTINUOUSLY;
 
     }
 
