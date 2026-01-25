@@ -17,8 +17,7 @@ class AstroLabelView(
 
     var showStarLabels = true
     var showConstellationLabels = true
-//    var MAG_THRESH = 2.5
-
+  
     var magnitudeThreshold: Double = 2.5
 
     private val starPaint = Paint().apply {
