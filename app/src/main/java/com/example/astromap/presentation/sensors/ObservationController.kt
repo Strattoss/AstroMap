@@ -12,8 +12,8 @@ class ObservationController(
     private val timeProvider = TimeProvider()
 
     private var rotationMatrix: FloatArray? = null
-    private var latitude: Double? = 50.0 // temp fix
-    private var longitude: Double? = 19.94 // temp fix
+    private var latitude: Double? = 50.0 // default
+    private var longitude: Double? = 19.94 // default
 
     private val orientationSensor =
         OrientationSensor(context) {

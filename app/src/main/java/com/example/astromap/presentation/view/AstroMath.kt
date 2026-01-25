@@ -55,7 +55,7 @@ object AstroMath {
 
         val latitudeRad = Math.toRadians(latitudeDeg)
         val localSiderealTimeRad = gmst(time) + Math.toRadians(longitudeDeg)
-        Log.d("myapp", localSiderealTimeRad.toString());
+        Log.d("myapp", localSiderealTimeRad.toString())
 
         val m = FloatArray(16)
         Matrix.setIdentityM(m, 0)
